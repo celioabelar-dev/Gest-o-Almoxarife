@@ -1,4 +1,4 @@
-# 📦 Sistema Controle de Ferramentaria
+# 📦 Sistema para Controle de Ferramentaria
 
 Bem-vindo(a) ao portfólio do sistema de gestão de ferramentaria. Esta ferramenta foi desenvolvida para resolver problemas de controle de estoque, garantindo precisão e agilidade no dia a dia.
 
