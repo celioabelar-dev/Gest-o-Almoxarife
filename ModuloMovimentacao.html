@@ -1,0 +1,450 @@
+<div id="ModuloMovimentacao" class="modulo-container">
+  
+  <div class="card border-0 shadow-sm p-3 mb-3 bg-white">
+    <div class="row align-items-center g-2">
+      <div class="col-md-3">
+        <h6 class="fw-bold m-0 text-primary"><i class="bi bi-arrow-left-right me-2"></i>MOVIMENTAÇÃO</h6>
+      </div>
+      <div class="col-md-6 d-flex gap-2">
+        <input type="text" id="filtroTecnico" class="form-control form-control-sm" placeholder="🔍 Filtrar Técnico..." onkeyup="window.filtrarTabelaMov()">
+        <input type="text" id="filtroFerramenta" class="form-control form-control-sm" placeholder="🔍 Filtrar Ferramenta..." onkeyup="window.filtrarTabelaMov()">
+      </div>
+      <div class="col-md-3 text-end">
+        <button class="btn btn-primary btn-sm fw-bold w-100" onclick="window.prepararModalSaida()">
+          <i class="bi bi-plus-circle me-1"></i> NOVA MOVIMENTAÇÃO
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm">
+    <div class="table-responsive" style="max-height: 70vh;">
+      <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
+        <thead class="table-dark">
+          <tr>
+            <th>DATA SAÍDA</th>
+            <th>TÉCNICO</th>
+            <th>ITEM / FERRAMENTA</th>
+            <th class="text-center">QTD</th>
+            <th class="text-center">MODALIDADE</th>
+            <th class="text-center">AÇÕES</th>
+          </tr>
+        </thead>
+        <tbody id="tabelaMovimentacao">
+          <tr><td colspan="6" class="text-center text-muted p-4">Carregando movimentações...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modalSaida" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow">
+        <form id="formEmprestimo">
+          <div class="modal-header bg-primary text-white p-2 px-3">
+            <h6 class="modal-title small fw-bold text-uppercase">Registrar Saída de Material</h6>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body p-4">
+            
+            <div class="mb-3">
+              <label class="small fw-bold text-muted">TÉCNICO RESPONSÁVEL</label>
+              <select id="selTecnico" class="form-select" required></select>
+            </div>
+
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label class="small fw-bold text-muted">TIPO DE SAÍDA</label>
+                <select id="tipoSaida" class="form-select" onchange="window.ajustarFluxoSaida(this.value)">
+                  <option value="SPOT">AVULSO (INDIVIDUAL)</option>
+                  <option value="MALETA">MALETA (KIT)</option>
+                </select>
+              </div>
+              <div class="col-6">
+                <label class="small fw-bold text-muted">MODALIDADE</label>
+                <select id="tipoEmprestimo" class="form-select border-warning">
+                  <option value="SPOT">SPOT (07 DIAS)</option>
+                  <option value="MOBILIZADO">MOBILIZADO</option>
+                </select>
+              </div>
+            </div>
+
+            <hr>
+
+            <div id="boxSpot">
+              <div class="mb-3">
+                <label class="small fw-bold text-muted">SELECIONAR FERRAMENTA</label>
+                <select id="selFer" class="form-select mb-2"></select>
+              </div>
+              <div class="mb-3">
+                <label class="small fw-bold text-muted">QUANTIDADE</label>
+                <input type="number" id="mov_qtd" class="form-control" value="1" min="1">
+              </div>
+            </div>
+
+            <div id="boxMaleta" style="display:none;">
+              <div class="mb-3">
+                <label class="small fw-bold text-muted">SELECIONAR MALETA SALVA</label>
+                <select id="selMaletaConfig" class="form-select"></select>
+              </div>
+            </div>
+
+          </div>
+          <div class="modal-footer bg-light">
+            <button type="submit" id="btnSalvarSaida" class="btn btn-primary w-100 fw-bold py-2">
+              CONFIRMAR E REGISTRAR
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modalConfirmarBaixa" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header bg-dark text-white p-2 px-3">
+          <h6 class="modal-title small fw-bold text-uppercase"><i class="bi bi-shield-check me-2"></i>Finalizar Pendência</h6>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-3">
+          <input type="hidden" id="baixa_idMov">
+          
+          <div class="mb-3">
+            <label class="small fw-bold text-muted mb-1">CONDIÇÃO DE RETORNO</label>
+            <select id="baixa_motivo" class="form-select form-select-sm" onchange="window.verificarMotivoBaixa(this.value)">
+              <option value="NORMAL">🔄 DEVOLUÇÃO NORMAL (OK)</option>
+              <option value="QUEBRA">💥 QUEBRA / DANIFICADO</option>
+              <option value="EXTRAVIO">🔍 EXTRAVIO / PERDIDO</option>
+              <option value="DESGASTE">🛠️ DESGASTE NATURAL</option>
+            </select>
+          </div>
+
+          <div class="mb-2" id="boxObsBaixa" style="display: none;">
+            <label class="small fw-bold text-muted mb-1">DETALHES / JUSTIFICATIVA</label>
+            <textarea id="baixa_obs" class="form-control form-control-sm" rows="2" placeholder="Descreva o que houve com a ferramenta..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer bg-light p-2 d-flex gap-1">
+          <button type="button" class="btn btn-secondary btn-sm flex-grow-1" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-success btn-sm fw-bold flex-grow-1" onclick="window.executarBaixaFinal()">CONCLUIR</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// =========================================================================
+// MÓDULO DE MOVIMENTAÇÃO - CONTROLE DE INTERFACE E IMPRESSÕES
+// =========================================================================
+
+window.prepararModalSaida = function() {
+  const modalEl = document.getElementById('modalSaida');
+  const myModal = new bootstrap.Modal(modalEl);
+  document.getElementById('formEmprestimo').reset();
+  window.ajustarFluxoSaida('SPOT');
+
+  // Carregar Técnicos
+  google.script.run.withSuccessHandler(res => {
+    let h = '<option value="">Selecione o Técnico...</option>';
+    if(res) res.forEach(t => h += `<option value="${t.id}">${t.nome}</option>`);
+    document.getElementById('selTecnico').innerHTML = h;
+  }).buscarTecnicos('todos');
+
+  // Carregar Ferramentas
+  google.script.run.withSuccessHandler(res => {
+    let h = '<option value="">Selecione o Item...</option>';
+    if(res && res.lista) res.lista.forEach(f => h += `<option value="${f.id}">${f.id} - ${f.descricao}</option>`);
+    document.getElementById('selFer').innerHTML = h;
+  }).buscarFerramentas('todos');
+
+  // Carregar Maletas
+  google.script.run.withSuccessHandler(res => {
+    let h = '<option value="">Selecione a Maleta...</option>';
+    if(res) res.forEach(m => h += `<option value="${m.id}">${m.id}</option>`);
+    document.getElementById('selMaletaConfig').innerHTML = h;
+  }).buscarTodasMaletas();
+
+  myModal.show();
+};
+
+window.ajustarFluxoSaida = function(v) {
+  const selectModalidade = document.getElementById('tipoEmprestimo');
+  const boxSpot = document.getElementById('boxSpot');
+  const boxMaleta = document.getElementById('boxMaleta');
+
+  if (v === 'MALETA') {
+    if(boxSpot) boxSpot.style.display = 'none';
+    if(boxMaleta) boxMaleta.style.display = 'block';
+
+    selectModalidade.innerHTML = '<option value="MALETA">MALETA</option>';
+    selectModalidade.value = 'MALETA';
+    selectModalidade.disabled = true;
+  } else {
+    if(boxSpot) boxSpot.style.display = 'block';
+    if(boxMaleta) boxMaleta.style.display = 'none';
+
+    selectModalidade.innerHTML = `
+      <option value="SPOT">SPOT (07 DIAS)</option>
+      <option value="MOBILIZADO">MOBILIZADO</option>
+    `;
+    selectModalidade.value = 'SPOT';
+    selectModalidade.disabled = false;
+  }
+};
+
+// =========================================================================
+// 🌟 ENVIO DE SAÍDA - BLINDADO CONTRA O ERRO DE 'NULL'
+// =========================================================================
+document.getElementById('formEmprestimo').addEventListener('submit', function(e) {
+  e.preventDefault();
+
+  const btnSalvar = document.getElementById('btnSalvarSaida');
+  if(btnSalvar) {
+    btnSalvar.disabled = true;
+    btnSalvar.innerText = "⏳ REGISTRANDO...";
+  }
+
+  const tipoSaida = document.getElementById('tipoSaida').value;
+  
+  let dadosPayload = {
+    tecnicoId: document.getElementById('selTecnico').value,
+    tipoSaida: tipoSaida,
+    tipoEmprestimo: document.getElementById('tipoEmprestimo').value
+  };
+
+  if (tipoSaida === 'SPOT') {
+    dadosPayload.ferramentaId = document.getElementById('selFer').value;
+    dadosPayload.qtd = document.getElementById('mov_qtd').value;
+  } else {
+    dadosPayload.idMaleta = document.getElementById('selMaletaConfig').value;
+  }
+
+  google.script.run
+    .withFailureHandler(err => {
+      alert("❌ Erro ao registrar saída: " + err.message);
+      if(btnSalvar) {
+        btnSalvar.disabled = false;
+        btnSalvar.innerText = "CONFIRMAR E REGISTRAR";
+      }
+    })
+    .withSuccessHandler(resultado => {
+      // TRATAMENTO BLINDADO: Impede o erro "Cannot read properties of null"
+      let msgExibir = "✅ Saída registrada com sucesso!";
+      if (resultado && typeof resultado === 'object' && resultado.msg) {
+        msgExibir = resultado.msg;
+      } else if (typeof resultado === 'string') {
+        msgExibir = resultado;
+      }
+      
+      alert(msgExibir);
+
+      if (msgExibir.includes("✅")) {
+        if (tipoSaida === 'MALETA') {
+          if (confirm("Deseja gerar o Termo de Responsabilidade (A4)?")) {
+            window.gerarETermoeImprimir(dadosPayload.idMaleta, dadosPayload.tecnicoId);
+          }
+        } else {
+          if (confirm("Deseja imprimir o Romaneio de Empréstimo Térmico?")) {
+            window.imprimirRomaneioEmprestimo(
+              dadosPayload.ferramentaId,
+              dadosPayload.qtd,
+              dadosPayload.tecnicoId,
+              dadosPayload.tipoEmprestimo
+            );
+          }
+        }
+      }
+
+      const modalEl = document.getElementById('modalSaida');
+      const modalInstance = bootstrap.Modal.getInstance(modalEl);
+      if(modalInstance) modalInstance.hide();
+
+      window.listarMovimentacoesAbertas();
+
+      if(btnSalvar) {
+        btnSalvar.disabled = false;
+        btnSalvar.innerText = "CONFIRMAR E REGISTRAR";
+      }
+    })
+    .registrarSaida(dadosPayload);
+});
+
+// =========================================================================
+// 🌟 EXECUÇÃO DE BAIXA - BLINDADA CONTRA O ERRO DE 'NULL'
+// =========================================================================
+window.executarBaixaFinal = function() {
+  const idLinha = document.getElementById('baixa_idMov').value;
+  const motivo = document.getElementById('baixa_motivo').value;
+  const obs = document.getElementById('baixa_obs').value;
+
+  if (motivo !== "NORMAL" && obs.trim() === "") {
+    return alert("Insira uma observação justificando a condição do item.");
+  }
+
+  // Captura dados da tabela antes de fechar o modal
+  let idItem = "Avulso", qtd = 1, tec = "Técnico";
+  const botaoOriginal = document.querySelector(`button[onclick*="'${idLinha}'"]`);
+  if (botaoOriginal) {
+    const trElement = botaoOriginal.closest('tr');
+    if (trElement) {
+      const colunas = trElement.getElementsByTagName('td');
+      tec = colunas[1] ? colunas[1].innerText.trim() : "Não Identificado";
+      idItem = colunas[2] ? colunas[2].innerText.trim() : "Item Avulso";
+      qtd = colunas[3] ? colunas[3].innerText.trim() : "1";
+    }
+  }
+
+  const modalEl = document.getElementById('modalConfirmarBaixa');
+  const modalInstance = bootstrap.Modal.getInstance(modalEl);
+  
+  // Melhora: Remove o foco do botão para evitar avisos de 'aria-hidden' no console
+  if (document.activeElement) document.activeElement.blur();
+  
+  if(modalInstance) modalInstance.hide();
+
+  google.script.run
+    .withFailureHandler(err => alert("❌ Erro ao realizar a baixa: " + err.message))
+    .withSuccessHandler(resultado => {
+      
+      // Tratamento blindado: Aceita objeto {msg: "..."} ou string direta
+      let mensagemExibir = "✅ Baixa processada!";
+      if (resultado && typeof resultado === 'object' && resultado.msg) {
+        mensagemExibir = resultado.msg;
+      } else if (typeof resultado === 'string') {
+        mensagemExibir = resultado;
+      }
+      
+      alert(mensagemExibir);
+
+      if (mensagemExibir.includes("✅")) {
+        if (confirm("Deseja imprimir o Comprovante de Devolução Térmico?")) {
+          window.imprimirRomaneioDevolucao(idItem, qtd, tec, motivo, obs);
+        }
+      }
+      window.listarMovimentacoesAbertas();
+    })
+    .confirmarBaixa(idLinha, motivo, obs);
+};
+
+// =========================================================================
+// FUNÇÕES DE IMPRESSÃO
+// =========================================================================
+
+window.imprimirRomaneioEmprestimo = function(idItem, quantidade, tecnicoId, modalidade) {
+  if (!idItem || !tecnicoId) return alert("⚠️ Dados insuficientes para gerar o romaneio.");
+  const janelaCupom = window.open('', '_blank', 'width=320,height=600,scrollbars=yes');
+  janelaCupom.document.write('<html><body><h5 style="font-family:monospace;text-align:center;margin-top:30px;">Gerando Romaneio...</h5></body></html>');
+
+  google.script.run
+    .withFailureHandler(err => { janelaCupom.close(); alert("❌ Erro: " + err.message); })
+    .withSuccessHandler(htmlConteudo => {
+      janelaCupom.document.open(); janelaCupom.document.write(htmlConteudo); janelaCupom.document.close();
+    })
+    .gerarRomaneioEmprestimo({ idItem, quantidade, tecnicoId, modalidade });
+};
+
+window.imprimirRomaneioDevolucao = function(idItem, quantidade, tecnicoId, motivoBaixa, obsBaixa) {
+  if (!idItem || !tecnicoId) return alert("⚠️ Dados insuficientes para gerar o comprovante.");
+  const janelaCupom = window.open('', '_blank', 'width=320,height=600,scrollbars=yes');
+  janelaCupom.document.write('<html><body><h5 style="font-family:monospace;text-align:center;margin-top:30px;">Gerando Comprovante...</h5></body></html>');
+
+  google.script.run
+    .withFailureHandler(err => { janelaCupom.close(); alert("❌ Erro: " + err.message); })
+    .withSuccessHandler(htmlConteudo => {
+      janelaCupom.document.open(); janelaCupom.document.write(htmlConteudo); janelaCupom.document.close();
+    })
+    .gerarRomaneioDevolucao({ idItem, quantidade, tecnicoId, motivoBaixa, obsBaixa });
+};
+
+window.gerarETermoeImprimir = function(idMaleta, tecnicoId) {
+  if (!idMaleta || !tecnicoId) return alert("⚠️ Dados insuficientes para gerar o termo.");
+  const novaAba = window.open('', '_blank');
+  novaAba.document.write('<html><body><h3 style="font-family:Arial;text-align:center;margin-top:50px;">Gerando Termo...</h3></body></html>');
+
+  google.script.run
+    .withFailureHandler(err => { novaAba.close(); alert("❌ Erro: " + err.message); })
+    .withSuccessHandler(htmlConteudo => {
+      novaAba.document.open(); novaAba.document.write(htmlConteudo); novaAba.document.close();
+    })
+    .gerarTermoResponsabilidade({ idMaleta, tecnicoId });
+};
+
+// =========================================================================
+// OUTRAS FUNÇÕES DO SISTEMA (FILTROS E INICIALIZAÇÃO)
+// =========================================================================
+
+window.listarMovimentacoesAbertas = function() {
+  google.script.run
+    .withFailureHandler(err => {
+      document.getElementById('tabelaMovimentacao').innerHTML = `<tr><td colspan="6" class="text-center text-danger p-4">Erro: ${err.message}</td></tr>`;
+    })
+    .withSuccessHandler(res => {
+      let html = "";
+      if (!res || res.length === 0) {
+        html = '<tr><td colspan="6" class="text-center text-muted p-4">Nenhuma pendência encontrada.</td></tr>';
+      } else {
+        res.forEach(m => {
+          const statusLimpo = m.status ? m.status.toString().toUpperCase().trim() : "SPOT";
+          const ehMaleta = (statusLimpo === "MALETA");
+          let itemExibicao = m.fer || "---";
+          let badgeClass = "bg-info text-dark fw-bold";
+
+          if (ehMaleta) {
+            badgeClass = "bg-primary text-white fw-bold";
+            itemExibicao = `<span class="fw-bold text-dark">${m.fer}</span>`;
+          } else if (statusLimpo === "MOBILIZADO") {
+            badgeClass = "bg-warning text-dark fw-bold";
+          }
+
+          html += `
+            <tr>
+              <td>${m.dataSaida}</td>
+              <td class="fw-bold text-dark">${m.tec}</td>
+              <td>${itemExibicao}</td>
+              <td class="text-center fw-bold">${m.qtd}</td>
+              <td class="text-center"><span class="badge ${badgeClass} text-uppercase px-2 py-1">${statusLimpo}</span></td>
+              <td class="text-center">
+                <button class="btn btn-sm btn-success fw-bold px-3" onclick="window.confirmarBaixa('${m.idMov}')">
+                  <i class="bi bi-check2-circle me-1"></i> BAIXAR
+                </button>
+              </td>
+            </tr>`;
+        });
+      }
+      document.getElementById('tabelaMovimentacao').innerHTML = html;
+    }).buscarMovimentacoesAbertas();
+};
+
+window.buscarMovimentacoes = window.listarMovimentacoesAbertas;
+
+window.confirmarBaixa = function(idLinha) {
+  if (!idLinha) return alert("⚠️ Erro: ID da movimentação não encontrado.");
+  document.getElementById('baixa_idMov').value = idLinha;
+  document.getElementById('baixa_motivo').value = "NORMAL";
+  document.getElementById('baixa_obs').value = "";
+  document.getElementById('boxObsBaixa').style.display = "none";
+  new bootstrap.Modal(document.getElementById('modalConfirmarBaixa')).show();
+};
+
+window.verificarMotivoBaixa = function(valor) {
+  document.getElementById('boxObsBaixa').style.display = (valor === "NORMAL") ? "none" : "block";
+};
+
+window.filtrarTabelaMov = function() {
+  let t = document.getElementById('filtroTecnico').value.toUpperCase();
+  let f = document.getElementById('filtroFerramenta').value.toUpperCase();
+  let rows = document.querySelectorAll('#tabelaMovimentacao tr');
+  rows.forEach(r => {
+    let txtT = r.cells[1] ? r.cells[1].innerText.toUpperCase() : "";
+    let txtF = r.cells[2] ? r.cells[2].innerText.toUpperCase() : "";
+    r.style.display = (txtT.includes(t) && txtF.includes(f)) ? "" : "none";
+  });
+};
+
+window.onload = function() {
+  setTimeout(window.listarMovimentacoesAbertas, 500);
+};
+</script>

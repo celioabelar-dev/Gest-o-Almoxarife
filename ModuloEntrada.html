@@ -1,0 +1,114 @@
+<div id="ModuloEntrada" class="modulo-container">
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-success text-white p-3">
+      <h5 class="mb-0"><i class="bi bi-cart-plus me-2"></i> ENTRADA DE NOTA FISCAL (MÚLTIPLOS ITENS)</h5>
+    </div>
+    <div class="card-body p-4">
+      <form id="formEntrada">
+        <div class="row g-3 mb-4">
+          <div class="col-md-3">
+            <label class="small fw-bold text-muted">NÚMERO DA NF</label>
+            <input type="text" id="e_nf" class="form-control" required>
+          </div>
+          <div class="col-md-9">
+            <label class="small fw-bold text-muted">FORNECEDOR</label>
+            <input type="text" id="e_forn" class="form-control" required>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-bordered align-middle">
+            <thead class="table-light small fw-bold">
+              <tr>
+                <th style="width: 35%;">D - FERRAMENTA</th>
+                <th style="width: 15%;">H - NCM</th>
+                <th style="width: 10%;">E - QTD</th>
+                <th style="width: 20%;">F - VALOR UNIT.</th>
+                <th style="width: 15%;">G - IPI (%)</th>
+                <th style="width: 5%;"></th>
+              </tr>
+            </thead>
+            <tbody id="corpoItens"></tbody>
+          </table>
+        </div>
+
+        <button type="button" class="btn btn-outline-primary btn-sm mb-4" onclick="window.adicionarLinhaItem()">
+          <i class="bi bi-plus-lg"></i> ADICIONAR ITEM
+        </button>
+
+        <button type="submit" id="btnEntrada" class="btn btn-success w-100 fw-bold py-3">
+          PROCESSAR NOTA FISCAL COMPLETA
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  let listaFerramentasCache = "";
+
+  window.prepararEntrada = function() {
+    google.script.run.withSuccessHandler(res => {
+      let h = '<option value="">Selecione...</option>';
+      res.lista.forEach(f => h += `<option value="${f.id}">${f.id} - ${f.descricao}</option>`);
+      listaFerramentasCache = h;
+      if(document.getElementById('corpoItens').innerHTML === "") window.adicionarLinhaItem();
+    }).buscarFerramentas('todos');
+  };
+
+  window.adicionarLinhaItem = function() {
+    const tbody = document.getElementById('corpoItens');
+    const tr = document.createElement('tr');
+    tr.className = "linha-item-nf";
+    tr.innerHTML = `
+      <td><select class="form-select sel-item" required>${listaFerramentasCache}</select></td>
+      <td><input type="text" class="form-control inp-ncm" placeholder="NCM" required></td>
+      <td><input type="number" class="form-control inp-qtd" min="1" required></td>
+      <td><input type="text" class="form-control inp-valor" placeholder="0,00" onkeyup="window.mascaraMoeda(this)" required></td>
+      <td><input type="text" class="form-control inp-ipi" value="0"></td>
+      <td><button type="button" class="btn btn-link text-danger p-0" onclick="this.closest('tr').remove()"><i class="bi bi-trash"></i></button></td>
+    `;
+    tbody.appendChild(tr);
+  };
+
+  window.mascaraMoeda = function(i) {
+    let v = i.value.replace(/\D/g,'');
+    v = (v/100).toFixed(2).replace(".",",");
+    i.value = v;
+  };
+
+  document.getElementById('formEntrada').onsubmit = function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btnEntrada');
+    const linhas = document.querySelectorAll('.linha-item-nf');
+    const paraNum = (txt) => parseFloat(txt.toString().replace(/\./g, '').replace(',', '.'));
+
+    const nfDados = {
+      nf: document.getElementById('e_nf').value,
+      fornecedor: document.getElementById('e_forn').value,
+      itens: []
+    };
+
+    linhas.forEach(linha => {
+      nfDados.itens.push({
+        idFerramenta: linha.querySelector('.sel-item').value,
+        ncm: linha.querySelector('.inp-ncm').value,
+        qtd: parseInt(linha.querySelector('.inp-qtd').value),
+        valor: paraNum(linha.querySelector('.inp-valor').value),
+        ipi: paraNum(linha.querySelector('.inp-ipi').value || "0")
+      });
+    });
+
+    btn.disabled = true;
+    btn.innerHTML = "A processar...";
+
+    google.script.run.withSuccessHandler(msg => {
+      alert(msg);
+      document.getElementById('corpoItens').innerHTML = "";
+      document.getElementById('formEntrada').reset();
+      window.adicionarLinhaItem();
+      btn.disabled = false;
+      btn.innerHTML = "PROCESSAR NOTA FISCAL COMPLETA";
+    }).registrarNotaFiscalLote(nfDados);
+  };
+</script>

@@ -1,0 +1,258 @@
+<div id="ModuloMaleta" class="modulo-container">
+  
+  <ul class="nav nav-tabs mb-3" id="maletaTabs" role="tablist">
+    <li class="nav-item">
+      <button class="nav-link active fw-bold text-uppercase" id="lista-tab" data-bs-toggle="tab" data-bs-target="#tab-lista" onclick="window.listarMaletas()">
+        <i class="bi bi- collection me-1"></i> Kits Cadastrados
+      </button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link fw-bold text-uppercase" id="form-tab" data-bs-toggle="tab" data-bs-target="#tab-form" onclick="window.limparFormMaleta()">
+        <i class="bi bi-tools me-1"></i> Montar / Editar Kit
+      </button>
+    </li>
+  </ul>
+
+  <div class="tab-content">
+    
+    <div class="tab-pane fade show active" id="tab-lista">
+      <div class="card border-0 shadow-sm p-3">
+        <div class="table-responsive" style="max-height: 60vh;">
+          <table class="table table-hover align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>IDENTIFICAÇÃO DO KIT (ID + DESCRIÇÃO)</th>
+                <th class="text-center">ITENS NO KIT</th>
+                <th class="text-center">AÇÕES</th>
+              </tr>
+            </thead>
+            <tbody id="corpo-lista-maletas">
+              </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-pane fade" id="tab-form">
+      <div class="row g-3">
+        
+        <div class="col-md-5">
+          <div class="card border-0 shadow-sm p-4 h-100">
+            <h6 class="fw-bold text-primary mb-4" id="tituloMaletaForm">
+              <i class="bi bi-plus-square me-2"></i>CONFIGURAR COMPOSIÇÃO
+            </h6>
+            
+            <div class="row g-2 mb-4">
+              <div class="col-4">
+                <label class="small fw-bold text-muted">ID</label>
+                <input type="text" id="m_id_maleta" class="form-control bg-light fw-bold" placeholder="MF-000" readonly title="ID Gerado Automaticamente">
+              </div>
+              <div class="col-8">
+                <label class="small fw-bold text-muted">DESCRIÇÃO DA MALETA</label>
+                <input type="text" id="m_desc_maleta" class="form-control border-primary" placeholder="Ex: BANCADA 01, KIT ELÉTRICA...">
+              </div>
+            </div>
+            
+            <div class="p-3 border rounded-3 bg-light shadow-sm">
+              <label class="small fw-bold mb-1">BUSCAR FERRAMENTA</label>
+              <select id="m_sel_ferramenta" class="form-select mb-3"></select>
+              
+              <div class="row g-2 align-items-end">
+                <div class="col-4">
+                  <label class="small fw-bold mb-1">QTD</label>
+                  <input type="number" id="m_qtd_ferramenta" class="form-control" value="1" min="1">
+                </div>
+                <div class="col-8">
+                  <button class="btn btn-dark w-100 fw-bold" onclick="window.adicionarItemNaMaleta()">
+                    <i class="bi bi-plus-lg me-1"></i> ADICIONAR
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-7">
+          <div class="card border-0 shadow-sm p-4 h-100 d-flex flex-column">
+            <h6 class="fw-bold border-bottom pb-2 mb-3">LISTA DE COMPOSIÇÃO</h6>
+            
+            <div id="lista_composicao_temp" class="flex-grow-1 overflow-auto mb-3" style="min-height: 200px;">
+               <div class="text-center text-muted mt-5">Nenhum item adicionado ao kit.</div>
+            </div>
+            
+            <div class="d-flex gap-2">
+              <button class="btn btn-outline-secondary fw-bold px-4" onclick="window.limparFormMaleta()">
+                LIMPAR
+              </button>
+              <button id="btnSalvarMaleta" class="btn btn-success fw-bold flex-grow-1 py-2" onclick="window.salvarMaletaCompleta()" disabled>
+                <i class="bi bi-check-circle me-1"></i> SALVAR CONFIGURAÇÃO
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  window.itensMaletaTemp = [];
+
+  // Inicia o módulo carregando ferramentas e a lista existente
+  window.prepararModuloMaleta = () => {
+    google.script.run.withSuccessHandler(f => {
+      let h = '<option value="">Selecione...</option>';
+      f.lista.forEach(i => h += `<option value="${i.id}">${i.id} - ${i.descricao}</option>`);
+      document.getElementById('m_sel_ferramenta').innerHTML = h;
+    }).buscarFerramentas('todos');
+    window.listarMaletas();
+  };
+
+  // Adiciona item à lista temporária (antes de salvar no banco)
+  window.adicionarItemNaMaleta = () => {
+    const sel = document.getElementById('m_sel_ferramenta');
+    const qtd = document.getElementById('m_qtd_ferramenta').value;
+    
+    if(!sel.value || qtd < 1) {
+      alert("Selecione uma ferramenta e informe a quantidade.");
+      return;
+    }
+
+    const itemJaExiste = window.itensMaletaTemp.findIndex(it => it.id === sel.value);
+    
+    if(itemJaExiste > -1) {
+      window.itensMaletaTemp[itemJaExiste].qtd = parseInt(window.itensMaletaTemp[itemJaExiste].qtd) + parseInt(qtd);
+    } else {
+      window.itensMaletaTemp.push({
+        id: sel.value,
+        desc: sel.options[sel.selectedIndex].text.split(' - ')[1],
+        qtd: parseInt(qtd)
+      });
+    }
+    
+    window.renderizarComposicao();
+    document.getElementById('m_qtd_ferramenta').value = 1;
+  };
+
+  // Renderiza a lista de itens que estão sendo montados
+  window.renderizarComposicao = () => {
+    const container = document.getElementById('lista_composicao_temp');
+    const btn = document.getElementById('btnSalvarMaleta');
+    
+    if(window.itensMaletaTemp.length === 0) {
+      container.innerHTML = '<div class="text-center text-muted mt-5">Nenhum item adicionado ao kit.</div>';
+      btn.disabled = true;
+      return;
+    }
+
+    let h = '<div class="list-group shadow-sm">';
+    window.itensMaletaTemp.forEach((it, idx) => {
+      h += `
+        <div class="list-group-item d-flex justify-content-between align-items-center bg-white border-start-0 border-end-0">
+          <div>
+            <div class="fw-bold text-dark">${it.desc}</div>
+            <code class="small text-muted">${it.id}</code>
+          </div>
+          <div class="d-flex align-items-center gap-3">
+             <span class="badge bg-primary rounded-pill px-3 py-2">x${it.qtd}</span>
+             <button class="btn btn-sm btn-outline-danger border-0" onclick="window.removerItemMaleta(${idx})">
+                <i class="bi bi-trash"></i>
+             </button>
+          </div>
+        </div>`;
+    });
+    h += '</div>';
+    container.innerHTML = h;
+    btn.disabled = false;
+  };
+
+  window.removerItemMaleta = (idx) => {
+    window.itensMaletaTemp.splice(idx, 1);
+    window.renderizarComposicao();
+  };
+
+  // Salva no banco de dados
+  window.salvarMaletaCompleta = () => {
+    const id = document.getElementById('m_id_maleta').value;
+    const desc = document.getElementById('m_desc_maleta').value;
+    const btn = document.getElementById('btnSalvarMaleta');
+    
+    if(!desc || desc.trim().length < 3) {
+      alert("Por favor, informe uma descrição válida para a maleta (mín. 3 letras).");
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>PROCESSANDO...';
+
+    google.script.run.withSuccessHandler(res => {
+      alert(res);
+      window.limparFormMaleta();
+      bootstrap.Tab.getInstance(document.querySelector('#lista-tab')).show();
+      window.listarMaletas();
+    }).salvarNovaMaleta(id, desc, window.itensMaletaTemp);
+  };
+
+  // Carrega a tabela de kits existentes
+  window.listarMaletas = () => {
+    google.script.run.withSuccessHandler(res => {
+      let h = "";
+      if(!res || res.length === 0) {
+        h = '<tr><td colspan="3" class="text-center text-muted py-4">Nenhuma maleta cadastrada.</td></tr>';
+      } else {
+        res.forEach(m => {
+          h += `
+            <tr>
+              <td class="fw-bold"><i class="bi bi-box-seam me-2 text-primary"></i>${m.id}</td>
+              <td class="text-center"><span class="badge bg-light text-dark border">${m.totalItens} Tipos</span></td>
+              <td class="text-center">
+                <button class="btn btn-sm btn-primary px-3 shadow-sm" onclick="window.editarMaleta('${m.id}')">
+                  <i class="bi bi-pencil-square"></i> EDITAR
+                </button>
+              </td>
+            </tr>`;
+        });
+      }
+      document.getElementById('corpo-lista-maletas').innerHTML = h;
+    }).buscarResumoMaletas();
+  };
+
+  // Carrega dados para edição
+ // Carrega dados para edição
+  window.editarMaleta = (idCompleto) => {
+    google.script.run.withSuccessHandler(itens => {
+      window.itensMaletaTemp = itens;
+      
+      // Extrai a descrição do ID (MF-001 BANCADA -> BANCADA)
+      const partes = idCompleto.split(' ');
+      const idApenas = partes[0];
+      const descApenas = partes.slice(1).join(' ');
+
+      document.getElementById('m_id_maleta').value = idApenas;
+      document.getElementById('m_desc_maleta').value = descApenas;
+      document.getElementById('tituloMaletaForm').innerHTML = '<i class="bi bi-pencil-square me-2"></i>EDITANDO KIT';
+      
+      // SOLUÇÃO: Utiliza a api nativa do Bootstrap 5 para alternar entre as abas via JavaScript de forma segura
+      const triggerEl = document.querySelector('#form-tab');
+      if (triggerEl) {
+        const tabTrigger = new bootstrap.Tab(triggerEl);
+        tabTrigger.show();
+      }
+      
+      window.renderizarComposicao();
+    }).buscarItensDaMaleta(idCompleto);
+  };
+
+  // Reseta o formulário
+  window.limparFormMaleta = () => {
+    document.getElementById('m_id_maleta').value = "";
+    document.getElementById('m_desc_maleta').value = "";
+    document.getElementById('tituloMaletaForm').innerHTML = '<i class="bi bi-plus-square me-2"></i>CONFIGURAR COMPOSIÇÃO';
+    window.itensMaletaTemp = [];
+    window.renderizarComposicao();
+    const btn = document.getElementById('btnSalvarMaleta');
+    btn.innerHTML = '<i class="bi bi-check-circle me-1"></i> SALVAR CONFIGURAÇÃO';
+    btn.disabled = true;
+  };
+</script>

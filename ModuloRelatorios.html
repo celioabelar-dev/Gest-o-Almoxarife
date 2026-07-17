@@ -1,0 +1,342 @@
+<div id="ModuloRelatorios" class="modulo-container" style="display:none;">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="text-secondary"><i class="bi bi-graph-up-arrow"></i> Central de Relatórios Inteligentes</h2>
+    <button class="btn btn-primary" onclick="window.carregarRelatorios()">
+      <i class="bi bi-arrow-clockwise"></i> Atualizar Dados
+    </button>
+  </div>
+
+  <!-- Cards de KPIs Principais -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-3">
+      <div class="card bg-dark text-white border-0 shadow-sm h-100">
+        <div class="card-body">
+          <h6 class="text-uppercase text-muted small">Patrimônio em Ferramentas</h6>
+          <h3 id="kpi-valor-patrimonio" class="mb-0">R$ 0,00</h3>
+          <small class="text-white-50">Valoração total baseada nas NFs</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card bg-primary text-white border-0 shadow-sm h-100">
+        <div class="card-body">
+          <h6 class="text-uppercase text-white-50 small">Volume em Estoque</h6>
+          <h3 id="kpi-total-itens" class="mb-0">0 itens</h3>
+          <small class="text-white-50">Soma física de ferramentas</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card bg-warning text-dark border-0 shadow-sm h-100">
+        <div class="card-body">
+          <h6 class="text-uppercase text-dark-50 small">Ferramentas em Campo</h6>
+          <h3 id="kpi-total-emprestados" class="mb-0">0 itens</h3>
+          <small class="text-dark-50">Maletas + Alocações Spot</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card bg-danger text-white border-0 shadow-sm h-100">
+        <div class="card-body">
+          <h6 class="text-uppercase text-white-50 small">Rupturas de Estoque</h6>
+          <h3 id="kpi-itens-criticos" class="mb-0">0 itens</h3>
+          <small class="text-white-50">Ferramentas zeradas em armário</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navegação das Abas de Relatórios -->
+  <ul class="nav nav-tabs mb-3" id="abasRelatorios" role="tablist">
+    <li class="nav-item">
+      <button class="nav-link active" id="tab-emprestimos" data-bs-toggle="tab" data-bs-target="#panel-emprestimos" type="button"><i class="bi bi-clock-history"></i> Empréstimos Ativos</button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" id="tab-inventario" data-bs-toggle="tab" data-bs-target="#panel-inventario" type="button"><i class="bi bi-box-seam"></i> Inventário & Custos</button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" id="tab-baixas" data-bs-toggle="tab" data-bs-target="#panel-baixas" type="button"><i class="bi bi-exclamation-triangle"></i> Baixas Especiais</button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" id="tab-compras" data-bs-toggle="tab" data-bs-target="#panel-compras" type="button"><i class="bi bi-currency-dollar"></i> Entradas / NF-e</button>
+    </li>
+  </ul>
+
+  <!-- Filtro Geral Dinâmico e Botões de Exportação -->
+  <div class="row g-2 mb-3 align-items-center">
+    <div class="col-md-6">
+      <div class="input-group">
+        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+        <input type="text" id="filtro-relatorio" class="form-control border-start-0" placeholder="Filtrar dados na tabela atual..." onkeyup="filtrarTabelaRelatorio()">
+      </div>
+    </div>
+    <div class="col-md-6 text-md-end">
+      <button class="btn btn-outline-success btn-sm" onclick="exportarCSV()"><i class="bi bi-file-earmark-spreadsheet"></i> Exportar Excel (CSV)</button>
+      <button class="btn btn-outline-dark btn-sm" onclick="imprimirRelatorio()"><i class="bi bi-printer"></i> Imprimir PDF</button>
+    </div>
+  </div>
+
+  <!-- Corpo das Abas -->
+  <div class="tab-content bg-white p-4 rounded shadow-sm" id="conteudoAbasRelatorios">
+    
+    <!-- Painel 1: Empréstimos Ativos -->
+    <div class="tab-pane fade show active" id="panel-emprestimos" role="tabpanel">
+      <div class="table-responsive">
+        <table class="table table-hover table-striped align-middle border" id="tabela-emprestimos">
+          <thead class="table-light text-uppercase">
+            <tr>
+              <th>Cód. Saída</th>
+              <th>Data Saída</th>
+              <th>Técnico</th>
+              <th>Ferramenta</th>
+              <th>Qtd</th>
+              <th>Origem</th>
+              <th>Modalidade</th>
+              <th>Dias em Uso</th>
+              <th>Alerta</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Painel 2: Inventário & Custos -->
+    <div class="tab-pane fade" id="panel-inventario" role="tabpanel">
+      <div class="table-responsive">
+        <table class="table table-hover table-striped align-middle border" id="tabela-inventario">
+          <thead class="table-light text-uppercase">
+            <tr>
+              <th>Cód. WF</th>
+              <th>Descrição</th>
+              <th>Localização</th>
+              <th>Qtd Disp.</th>
+              <th>Qtd Aloc.</th>
+              <th>Qtd Total</th>
+              <th>Preço Médio</th>
+              <th>Patrimônio Total</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Painel 3: Baixas Especiais -->
+    <div class="tab-pane fade" id="panel-baixas" role="tabpanel">
+      <div class="table-responsive">
+        <table class="table table-hover table-striped align-middle border" id="tabela-baixas">
+          <thead class="table-light text-uppercase">
+            <tr>
+              <th>Data Ocorrência</th>
+              <th>Técnico</th>
+              <th>Ferramenta</th>
+              <th>Qtd Baixada</th>
+              <th>Justificativa / Observação</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Painel 4: Entradas / NF -->
+    <div class="tab-pane fade" id="panel-compras" role="tabpanel">
+      <div class="table-responsive">
+        <table class="table table-hover table-striped align-middle border" id="tabela-compras">
+          <thead class="table-light text-uppercase">
+            <tr>
+              <th>Data Entrada</th>
+              <th>Nº NF-e</th>
+              <th>Fornecedor</th>
+              <th>Ferramenta Adquirida</th>
+              <th>Qtd</th>
+              <th>Total Gasto com IPI</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Lógica Client-Side do Relatório -->
+<script>
+  let relatoriosCache = {};
+
+  window.carregarRelatorios = function() {
+    document.getElementById("conteudoAbasRelatorios").style.opacity = "0.5";
+    
+    google.script.run
+      .withSuccessHandler(function(dados) {
+        relatoriosCache = dados;
+        renderizarDashboards(dados);
+        document.getElementById("conteudoAbasRelatorios").style.opacity = "1";
+      })
+      .withFailureHandler(function(err) {
+        alert("Erro ao puxar dados do servidor: " + err);
+        document.getElementById("conteudoAbasRelatorios").style.opacity = "1";
+      })
+      .obterDadosRelatorios();
+  };
+
+  function renderizarDashboards(dados) {
+    // 1. Atualiza KPIs
+    document.getElementById("kpi-valor-patrimonio").innerText = Number(dados.kpis.valorTotalEstoque).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    document.getElementById("kpi-total-itens").innerText = dados.kpis.totalItensEstoque + " un";
+    document.getElementById("kpi-total-emprestados").innerText = dados.kpis.totalEmprestados + " un";
+    document.getElementById("kpi-itens-criticos").innerText = dados.kpis.itensCriticos + " un";
+
+    // 2. Renderiza Empréstimos Ativos
+    const tbodyEmp = document.querySelector("#tabela-emprestimos tbody");
+    tbodyEmp.innerHTML = dados.emprestimosAtivos.map(e => `
+      <tr class="${e.atrasado ? 'table-danger text-danger font-weight-bold' : ''}">
+        <td>${e.idMov}</td>
+        <td>${e.dataSaida}</td>
+        <td>${e.tecnico}</td>
+        <td>${e.ferramenta}</td>
+        <td>${e.qtd}</td>
+        <td>${e.origem}</td>
+        <td><span class="badge ${e.modalidade === 'SPOT' ? 'bg-info text-dark' : 'bg-secondary'}">${e.modalidade}</span></td>
+        <td>${e.dias} dias</td>
+        <td>${e.atrasado ? '<span class="badge bg-danger animate-pulse">ATRASADO</span>' : '<span class="badge bg-success">REGULAR</span>'}</td>
+      </tr>
+    `).join("") || '<tr><td colspan="9" class="text-center py-4">Nenhum empréstimo em aberto no momento!</td></tr>';
+
+    // 3. Renderiza Inventário
+    const tbodyInv = document.querySelector("#tabela-inventario tbody");
+    tbodyInv.innerHTML = dados.inventario.map(i => `
+      <tr class="${i.disponivel === 0 && i.total > 0 ? 'table-warning' : ''}">
+        <td><strong>${i.id}</strong></td>
+        <td>${i.descricao}</td>
+        <td><span class="badge bg-light text-dark">${i.local}</span></td>
+        <td class="text-center text-success">${i.disponivel}</td>
+        <td class="text-center text-danger">${i.emprestado}</td>
+        <td class="text-center fw-bold">${i.total}</td>
+        <td>${Number(i.valorUnit).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+        <td><strong>${Number(i.valorTotal).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</strong></td>
+      </tr>
+    `).join("");
+
+    // 4. Renderiza Baixas Especiais
+    const tbodyBaixas = document.querySelector("#tabela-baixas tbody");
+    tbodyBaixas.innerHTML = dados.baixasEspeciais.map(b => `
+      <tr>
+        <td>${b.data}</td>
+        <td>${b.tecnico}</td>
+        <td>${b.ferramenta}</td>
+        <td class="text-center fw-bold text-danger">${b.qtd}</td>
+        <td><span class="text-muted"><i class="bi bi-info-circle text-danger"></i> ${b.detalhe}</span></td>
+      </tr>
+    `).join("") || '<tr><td colspan="5" class="text-center py-4">Nenhum registro de baixa especial encontrado!</td></tr>';
+
+    // 5. Renderiza Entradas
+    const tbodyCompras = document.querySelector("#tabela-compras tbody");
+    tbodyCompras.innerHTML = dados.compras.map(c => `
+      <tr>
+        <td>${c.data}</td>
+        <td>${c.nf}</td>
+        <td>${c.fornecedor}</td>
+        <td>${c.ferramenta}</td>
+        <td>${c.qtd}</td>
+        <td>${Number(c.total).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+      </tr>
+    `).join("") || '<tr><td colspan="6" class="text-center py-4">Nenhum registro de compra cadastrado!</td></tr>';
+  }
+
+  // Filtro de buscas de digitação em Tempo Real
+  window.filtrarTabelaRelatorio = function() {
+    const input = document.getElementById("filtro-relatorio").value.toUpperCase();
+    const abaAtiva = document.querySelector("#abasRelatorios button.active").id;
+    let tabelaId = "";
+
+    if (abaAtiva === "tab-emprestimos") tabelaId = "tabela-emprestimos";
+    if (abaAtiva === "tab-inventario") tabelaId = "tabela-inventario";
+    if (abaAtiva === "tab-baixas") tabelaId = "tabela-baixas";
+    if (abaAtiva === "tab-compras") tabelaId = "tabela-compras";
+
+    const trs = document.querySelectorAll("#" + tabelaId + " tbody tr");
+    trs.forEach(tr => {
+      let match = false;
+      tr.querySelectorAll("td").forEach(td => {
+        if (td.innerText.toUpperCase().indexOf(input) > -1) {
+          match = true;
+        }
+      });
+      tr.style.display = match ? "" : "none";
+    });
+  };
+
+  // Exportar dados da tabela ativa para arquivo CSV (Excel compatível)
+  window.exportarCSV = function() {
+    const abaAtiva = document.querySelector("#abasRelatorios button.active").id;
+    let tabelaId = "";
+    if (abaAtiva === "tab-emprestimos") tabelaId = "tabela-emprestimos";
+    if (abaAtiva === "tab-inventario") tabelaId = "tabela-inventario";
+    if (abaAtiva === "tab-baixas") tabelaId = "tabela-baixas";
+    if (abaAtiva === "tab-compras") tabelaId = "tabela-compras";
+
+    const table = document.getElementById(tabelaId);
+    let csv = [];
+    const rows = table.querySelectorAll("tr");
+    
+    for (let i = 0; i < rows.length; i++) {
+      if (rows[i].style.display === "none") continue; // Ignora o que está filtrado
+      const row = [], cols = rows[i].querySelectorAll("td, th");
+      
+      for (let j = 0; j < cols.length; j++) {
+        let texto = cols[j].innerText.replace(/(\r\n|\n|\r)/gm, " ").trim();
+        texto = texto.replace(/"/g, '""'); // Escapar aspas duplas
+        row.push('"' + texto + '"');
+      }
+      csv.push(row.join(";"));
+    }
+
+    const csvFile = new Blob(["\ufeff" + csv.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const downloadLink = document.createElement("a");
+    downloadLink.download = `Relatorio_${abaAtiva}_${new Date().toISOString().slice(0,10)}.csv`;
+    downloadLink.href = window.URL.createObjectURL(csvFile);
+    downloadLink.style.display = "none";
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+  };
+
+  // Impressão da Área do Relatório Atual
+  window.imprimirRelatorio = function() {
+    const abaAtiva = document.querySelector("#abasRelatorios button.active").id;
+    let titulo = "";
+    let tabelaId = "";
+
+    if (abaAtiva === "tab-emprestimos") { titulo = "Relatório de Empréstimos Ativos"; tabelaId = "tabela-emprestimos"; }
+    if (abaAtiva === "tab-inventario") { titulo = "Relatório de Inventário & Valoração de Custos"; tabelaId = "tabela-inventario"; }
+    if (abaAtiva === "tab-baixas") { titulo = "Histórico de Baixas Especiais e Avarias"; tabelaId = "tabela-baixas"; }
+    if (abaAtiva === "tab-compras") { titulo = "Histórico de Entradas de NF-e"; tabelaId = "tabela-compras"; }
+
+    const tableContent = document.getElementById(tabelaId).outerHTML;
+    const win = window.open("", "", "height=700,width=900");
+    win.document.write(`
+      <html>
+      <head>
+        <title>Imprimir Relatório</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <style>
+          body { font-family: sans-serif; padding: 20px; }
+          .badge { border: 1px solid #000; color: #000 !important; background: transparent !important; }
+        </style>
+      </head>
+      <body onload="window.print(); window.close();">
+        <div class="text-center mb-4">
+          <h2>WELDTRONIC - SISTEMA INTEGRADO DE FERRAMENTARIA</h2>
+          <h4>${titulo}</h4>
+          <p class="text-muted">Emitido em: ${new Date().toLocaleString('pt-BR')}</p>
+        </div>
+        ${tableContent}
+      </body>
+      </html>
+    `);
+    win.document.close();
+  };
+</script>

@@ -1,0 +1,128 @@
+<div id="ModuloTecnicos" class="modulo-container" style="display: none;">
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center py-3">
+      <h5 class="m-0 fw-bold text-primary"><i class="bi bi-people-fill me-2"></i>EQUIPE TÉCNICA</h5>
+      <button class="btn btn-primary btn-sm px-4 fw-bold" onclick="window.abrirModalTecnico()">CADASTRAR TÉCNICO</button>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr style="font-size: 12px;">
+            <th>ID</th>
+            <th>NOME COMPLETO</th>
+            <th>MATRÍCULA</th>
+            <th>BANCADA / POSTO</th>
+            <th>STATUS</th>
+            <th class="text-center">AÇÕES</th>
+          </tr>
+        </thead>
+        <tbody id="corpo-tecnicos"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal do Técnico -->
+  <div class="modal fade" id="modalTecnico" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow">
+        <form id="formTecnico">
+          <div class="modal-header bg-dark text-white p-2 px-3">
+            <h6 class="modal-title">DADOS DO COLABORADOR</h6>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" id="t_id">
+            
+            <div class="mb-3">
+              <label class="small fw-bold">Nome Completo</label>
+              <input type="text" id="t_nome" class="form-control" required>
+            </div>
+            
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label class="small fw-bold">Matrícula</label>
+                <input type="text" id="t_mat" class="form-control" required>
+              </div>
+              <div class="col-6">
+                <label class="small fw-bold">Bancada</label>
+                <input type="text" id="t_bancada" class="form-control" placeholder="Ex: B-04">
+              </div>
+            </div>
+
+            <!-- NOVO CAMPO: STATUS DO COLABORADOR -->
+            <div class="mb-1">
+              <label class="small fw-bold">Status do Colaborador</label>
+              <select id="t_status" class="form-select" required>
+                <option value="ATIVO" selected>ATIVO</option>
+                <option value="INATIVO">INATIVO</option>
+              </select>
+            </div>
+
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-primary w-100 fw-bold">SALVAR TÉCNICO</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  var modalT = null;
+  
+  window.abrirModalTecnico = () => {
+    if(!modalT) modalT = new bootstrap.Modal(document.getElementById('modalTecnico'));
+    document.getElementById('formTecnico').reset();
+    document.getElementById('t_id').value = "";
+    document.getElementById('t_status').value = "ATIVO"; // Padrão ao criar novo cadastro
+    modalT.show();
+  };
+
+  window.listarTecnicos = (termo) => {
+    google.script.run.withSuccessHandler(res => {
+      let html = "";
+      res.forEach(t => {
+        // Altera a cor do crachá de forma dinâmica conforme o status
+        const statusClass = t.status === "INATIVO" 
+          ? "bg-danger-subtle text-danger" 
+          : "bg-success-subtle text-success";
+          
+        html += `<tr>
+          <td><small class="text-muted">${t.id}</small></td>
+          <td class="fw-bold">${t.nome}</td>
+          <td>${t.matricula}</td>
+          <td>${t.bancada || '-'}</td>
+          <td><span class="badge ${statusClass} px-2">${t.status || 'ATIVO'}</span></td>
+          <td class="text-center">
+            <i class="bi bi-pencil text-primary mx-2" style="cursor:pointer" onclick='window.editarTecnico(${JSON.stringify(t)})'></i>
+          </td>
+        </tr>`;
+      });
+      document.getElementById('corpo-tecnicos').innerHTML = html || '<tr><td colspan="6" class="text-center py-3">Nenhum técnico cadastrado.</td></tr>';
+    }).buscarTecnicos(termo);
+  };
+
+  document.getElementById('formTecnico').onsubmit = function(e) {
+    e.preventDefault();
+    const obj = {
+      id: document.getElementById('t_id').value,
+      nome: document.getElementById('t_nome').value,
+      matricula: document.getElementById('t_mat').value,
+      bancada: document.getElementById('t_bancada').value,
+      status: document.getElementById('t_status').value // Envia o novo status capturado
+    };
+    google.script.run.withSuccessHandler(msg => {
+      alert(msg); modalT.hide(); window.listarTecnicos('todos');
+    }).salvarTecnico(obj);
+  };
+
+  window.editarTecnico = (t) => {
+    window.abrirModalTecnico();
+    document.getElementById('t_id').value = t.id;
+    document.getElementById('t_nome').value = t.nome;
+    document.getElementById('t_mat').value = t.matricula;
+    document.getElementById('t_bancada').value = t.bancada;
+    document.getElementById('t_status').value = t.status || "ATIVO"; // Seleciona o status correto no formulário
+  };
+</script>
