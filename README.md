@@ -1,6 +1,6 @@
 # 📦 Sistema Integrado de Ferramentaria e Almoxarifado
 
-Bem-vindo(a) ao portfólio do sistema de gestão de almoxarifado. Esta ferramenta foi desenvolvida para resolver problemas de controle de estoque, garantindo precisão e agilidade no dia a dia.
+Bem-vindo(a) ao portfólio do sistema de gestão de ferramentaria. Esta ferramenta foi desenvolvida para resolver problemas de controle de estoque, garantindo precisão e agilidade no dia a dia.
 
 <div align="center">
   <img width="49%" alt="Tela do Sistema 1" src="https://github.com/user-attachments/assets/3581f44b-791b-4ddd-be05-eab446657d1a" />
