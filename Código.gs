@@ -408,7 +408,7 @@ function gerarTermoResponsabilidade(dados) {
         <h3 style="margin:0;">TERMO DE RESPONSABILIDADE E ENTREGA DE EQUIPAMENTOS/FERRAMENTAS</h3>
       </div>
 
-      <p><strong>EMPREGADOR:</strong> Weldtronic Manutenção Eletrônica Industrial, inscrita no CNPJ sob o nº 14.442.765/0001-96.<br>
+      <p><strong>EMPREGADOR:</strong> CRAS FERRAMENTARIA, inscrita no CNPJ sob o nº 00.000.000/0001-00.<br>
       <strong>EMPREGADO:</strong> ${tecnico ? tecnico[1] : '[NOME DO FUNCIONÁRIO]'}, portador do CPF nº ${tecnico ? (tecnico[4] || '[CPF]') : '[CPF]'}.</p>
 
       <p><strong>1. DA ENTREGA DOS EQUIPAMENTOS</strong><br>
@@ -448,7 +448,7 @@ function gerarTermoResponsabilidade(dados) {
       <p style="margin-top: 20px;">Local e Data: Contagem, ${dataAtual}.</p>
 
       <div class="assinaturas">
-        <div class="campo">Weldtronic (Empregador)</div>
+        <div class="campo">Cras Ferramentaria (Empregador)</div>
         <div class="campo">${tecnico ? tecnico[1] : 'Empregado'}</div>
       </div>
     </body>
@@ -887,7 +887,7 @@ function gerarRomaneioEmprestimo(dados) {
     <body>
       <button class="no-print" onclick="window.print()">🖨️ IMPRIMIR ROMANEIO</button>
 
-      <div class="text-center bold" style="font-size: 13px;">WELDTRONIC</div>
+      <div class="text-center bold" style="font-size: 13px;">CRAS</div>
       <div class="text-center" style="font-size: 9px;">Manutenção Eletrônica Industrial</div>
       
       <div class="divisor"></div>
@@ -995,7 +995,7 @@ function gerarRomaneioDevolucao(dados) {
       <body>
         <button class="no-print" onclick="window.print()">🖨️ IMPRIMIR COMPROVANTE</button>
 
-        <div class="text-center bold" style="font-size: 13px;">WELDTRONIC</div>
+        <div class="text-center bold" style="font-size: 13px;">CRAS</div>
         <div class="text-center" style="font-size: 9px;">Manutenção Eletrônica Industrial</div>
         
         <div class="divisor"></div>
